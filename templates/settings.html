@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="company-header">
+  <h4 class="mb-0"><i class="bi bi-gear me-2"></i>Settings</h4>
+</div>
+{% if msg %}<div class="alert alert-success">{{ msg }}</div>{% endif %}
+
+<form method="post">
+  <div class="row g-3">
+    <div class="col-12"><div class="section-title"><i class="bi bi-building me-2"></i>Company Information</div></div>
+    <div class="col-md-4">
+      <label class="form-label fw-bold">Company Name</label>
+      <input type="text" class="form-control" name="company_name" value="{{ settings.company_name }}"/>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label fw-bold">Address</label>
+      <input type="text" class="form-control" name="company_address" value="{{ settings.company_address }}"/>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label fw-bold">Phone</label>
+      <input type="text" class="form-control" name="company_phone" value="{{ settings.company_phone }}"/>
+    </div>
+
+    <div class="col-12"><div class="section-title"><i class="bi bi-truck me-2"></i>Truck Numbers</div></div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Truck Numbers <small class="text-muted">(one per line)</small></label>
+      <textarea class="form-control" name="trucks" rows="6" placeholder="TN01AB1234&#10;TN02CD5678">{{ settings.trucks|join('\n') }}</textarea>
+    </div>
+
+    <div class="col-12"><div class="section-title"><i class="bi bi-person me-2"></i>Driver Names</div></div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Driver Names <small class="text-muted">(one per line)</small></label>
+      <textarea class="form-control" name="drivers" rows="6" placeholder="John Doe&#10;Jane Smith">{{ settings.drivers|join('\n') }}</textarea>
+    </div>
+
+    <div class="col-12 mt-2">
+      <button type="submit" class="btn btn-primary btn-lg fw-bold px-5">
+        <i class="bi bi-save me-1"></i> Save Settings
+      </button>
+    </div>
+  </div>
+</form>
+{% endblock %}

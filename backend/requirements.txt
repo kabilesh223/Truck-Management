@@ -1,0 +1,11 @@
+fastapi==0.136.3
+uvicorn==0.48.0
+python-multipart==0.0.29
+pydantic==2.13.4
+openpyxl==3.1.5
+SQLAlchemy==2.0.50
+anyio==4.13.0
+h11==0.16.0
+starlette==1.1.0
+annotated-types==0.7.0
+pydantic_core==2.46.4

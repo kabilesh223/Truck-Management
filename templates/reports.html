@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="company-header">
+  <h4 class="mb-0"><i class="bi bi-file-earmark-excel me-2"></i>Reports</h4>
+</div>
+
+<div class="card">
+  <div class="card-header">Generate & Download Reports</div>
+  <div class="card-body">
+    <form method="post" action="/download_report">
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <label class="form-label fw-bold">From Date</label>
+          <input type="date" class="form-control" name="date_from"/>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold">To Date</label>
+          <input type="date" class="form-control" name="date_to"/>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold">Truck</label>
+          <select class="form-select" name="truck">
+            <option value="All">All Trucks</option>
+            {% for t in trucks %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold">Driver</label>
+          <select class="form-select" name="driver">
+            <option value="All">All Drivers</option>
+            {% for d in drivers %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        {% set report_types = [
+          ('full',       'bi-file-earmark-text',  '#1F4E79', 'Full Summary Report',    'All trips in one sheet'),
+          ('filtered',   'bi-funnel',              '#2E75B6', 'Filtered Report',        'Apply date/truck/driver filters'),
+          ('per_truck',  'bi-truck',               '#8E44AD', 'Per-Truck Report',       'Separate sheet per truck'),
+          ('per_driver', 'bi-person',              '#27AE60', 'Per-Driver Report',      'Separate sheet per driver'),
+          ('monthly',    'bi-calendar3',           '#E67E22', 'Monthly Summary',        'Separate sheet per month'),
+        ] %}
+        {% for rtype, icon, color, title, desc in report_types %}
+        <div class="col-md-4">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center py-4">
+              <i class="bi {{ icon }} fs-2 mb-2" style="color:{{ color }};"></i>
+              <h6 class="fw-bold">{{ title }}</h6>
+              <p class="text-muted small mb-3">{{ desc }}</p>
+              <button type="submit" name="report_type" value="{{ rtype }}"
+                      class="btn btn-sm fw-bold text-white" style="background:{{ color }};">
+                <i class="bi bi-download me-1"></i> Download
+              </button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

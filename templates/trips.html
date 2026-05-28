@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="company-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4 class="mb-0"><i class="bi bi-table me-2"></i>All Trip Records</h4>
+    <small style="color:#AED6F1;">{{ trips|length }} total trips</small>
+  </div>
+  <div>
+    <a href="/new_trip" class="btn btn-warning btn-sm fw-bold me-2"><i class="bi bi-plus-circle"></i> New Trip</a>
+    <button class="btn btn-success btn-sm fw-bold" onclick="doBackup()"><i class="bi bi-cloud-download"></i> Backup</button>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <form method="get" class="row g-2 align-items-end" id="filterForm">
+      <div class="col-md-3">
+        <label class="form-label mb-1 small fw-bold">Search</label>
+        <input type="text" class="form-control form-control-sm" name="search" id="searchInput"
+               value="{{ request.args.get('search','') }}" placeholder="Search anything..."/>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label mb-1 small fw-bold">Truck</label>
+        <select class="form-select form-select-sm" name="truck">
+          <option value="All">All Trucks</option>
+          {% for t in trucks %}<option value="{{ t }}" {% if request.args.get('truck')==t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label mb-1 small fw-bold">Driver</label>
+        <select class="form-select form-select-sm" name="driver">
+          <option value="All">All Drivers</option>
+          {% for d in drivers %}<option value="{{ d }}" {% if request.args.get('driver')==d %}selected{% endif %}>{{ d }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label mb-1 small fw-bold">From</label>
+        <input type="date" class="form-control form-control-sm" name="date_from" value="{{ request.args.get('date_from','') }}"/>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label mb-1 small fw-bold">To</label>
+        <input type="date" class="form-control form-control-sm" name="date_to" value="{{ request.args.get('date_to','') }}"/>
+      </div>
+      <div class="col-md-1 d-flex gap-1">
+        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-funnel"></i></button>
+        <a href="/trips" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x"></i></a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Summary bar -->
+<div class="row g-2 mb-3">
+  <div class="col-4">
+    <div class="card text-center py-2" style="background:#1F4E79;color:#fff;">
+      <div class="fw-bold fs-5">{{ filtered_trips|length }}</div>
+      <div class="small">Trips</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="card text-center py-2" style="background:#27AE60;color:#fff;">
+      <div class="fw-bold fs-5">₹{{ "%.0f"|format(total_freight) }}</div>
+      <div class="small">Total Freight</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="card text-center py-2" style="background:{% if total_balance < 0 %}#E74C3C{% else %}#2E75B6{% endif %};color:#fff;">
+      <div class="fw-bold fs-5">₹{{ "%.0f"|format(total_balance) }}</div>
+      <div class="small">Total Balance</div>
+    </div>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover table-bordered mb-0 small">
+        <thead>
+          <tr>
+            {% for h in headers %}<th class="text-center" style="white-space:nowrap;">{{ h }}</th>{% endfor %}
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for trip in filtered_trips %}
+          <tr class="{% if trip[16] is not none and trip[16]|float < 0 %}neg-balance{% endif %}">
+            {% for val in trip %}
+            <td class="text-center">
+              {% if val is none %}—
+              {% elif loop.index in [8,9,10,12,13,14,15,16,17] %}₹{{ "%.2f"|format(val|float) }}
+              {% else %}{{ val }}{% endif %}
+            </td>
+            {% endfor %}
+            <td class="text-center" style="white-space:nowrap;">
+              <a href="/edit_trip/{{ trip[0] }}" class="btn btn-sm btn-outline-primary py-0 px-2"><i class="bi bi-pencil"></i></a>
+              <form method="post" action="/delete_trip/{{ trip[0] }}" class="d-inline"
+                    onsubmit="return confirm('Delete Trip #{{ trip[0] }}?')">
+                <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2"><i class="bi bi-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="{{ headers|length + 1 }}" class="text-center text-muted py-4">No trips found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="backupMsg" class="alert alert-success mt-3 d-none"></div>
+{% endblock %}
+{% block scripts %}
+<script>
+function doBackup(){
+  fetch('/backup',{method:'POST'}).then(r=>r.json()).then(d=>{
+    const el=document.getElementById('backupMsg');
+    el.textContent='Backup saved: '+d.file; el.classList.remove('d-none');
+    setTimeout(()=>el.classList.add('d-none'),4000);
+  });
+}
+// Live search
+document.getElementById('searchInput').addEventListener('input', function(){
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('tbody tr').forEach(row=>{
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

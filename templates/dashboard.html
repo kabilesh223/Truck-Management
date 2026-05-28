@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="company-header">
+  <h4 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Dashboard</h4>
+</div>
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md">
+    <div class="kpi-card" style="background:#1F4E79;">
+      <div class="kpi-val">{{ total_trips }}</div>
+      <div class="kpi-lbl">🚛 Total Trips</div>
+    </div>
+  </div>
+  <div class="col-6 col-md">
+    <div class="kpi-card" style="background:#27AE60;">
+      <div class="kpi-val">₹{{ "%.0f"|format(total_freight) }}</div>
+      <div class="kpi-lbl">💰 Total Freight</div>
+    </div>
+  </div>
+  <div class="col-6 col-md">
+    <div class="kpi-card" style="background:{% if total_balance < 0 %}#E74C3C{% else %}#2E75B6{% endif %};">
+      <div class="kpi-val">₹{{ "%.0f"|format(total_balance) }}</div>
+      <div class="kpi-lbl">📊 Net Balance</div>
+    </div>
+  </div>
+  <div class="col-6 col-md">
+    <div class="kpi-card" style="background:#8E44AD;">
+      <div class="kpi-val">{{ "%.1f"|format(total_fuel) }}</div>
+      <div class="kpi-lbl">⛽ Fuel (L)</div>
+    </div>
+  </div>
+  <div class="col-6 col-md">
+    <div class="kpi-card" style="background:#C0392B;">
+      <div class="kpi-val">{{ trucks_count }}</div>
+      <div class="kpi-lbl">🚚 Active Trucks</div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">Freight per Truck</div>
+      <div class="card-body"><canvas id="truckChart" height="220"></canvas></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">Trips per Month</div>
+      <div class="card-body"><canvas id="monthChart" height="220"></canvas></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">Balance per Driver</div>
+      <div class="card-body"><canvas id="driverChart" height="220"></canvas></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const truckLabels  = {{ truck_freight.keys()|list|tojson }};
+const truckValues  = {{ truck_freight.values()|list|tojson }};
+const monthLabels  = {{ monthly.keys()|list|tojson }};
+const monthValues  = {{ monthly.values()|list|tojson }};
+const driverLabels = {{ driver_bal.keys()|list|tojson }};
+const driverValues = {{ driver_bal.values()|list|tojson }};
+
+new Chart(document.getElementById('truckChart'),{
+  type:'bar',
+  data:{labels:truckLabels,datasets:[{label:'Freight (₹)',data:truckValues,backgroundColor:'#2E75B6',borderRadius:6}]},
+  options:{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'₹'+v.toLocaleString('en-IN')}}}}
+});
+new Chart(document.getElementById('monthChart'),{
+  type:'bar',
+  data:{labels:monthLabels,datasets:[{label:'Trips',data:monthValues,backgroundColor:'#27AE60',borderRadius:6}]},
+  options:{plugins:{legend:{display:false}}}
+});
+const driverColors = driverValues.map(v => v >= 0 ? '#27AE60' : '#E74C3C');
+new Chart(document.getElementById('driverChart'),{
+  type:'bar',
+  data:{labels:driverLabels,datasets:[{label:'Balance (₹)',data:driverValues,backgroundColor:driverColors,borderRadius:6}]},
+  options:{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'₹'+v.toLocaleString('en-IN')}}}}
+});
+</script>
+{% endblock %}

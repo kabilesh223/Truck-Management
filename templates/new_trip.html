@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="company-header">
+  <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>New Trip Entry</h4>
+</div>
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+<form method="post" id="tripForm">
+  <div class="row g-3">
+    <!-- Trip Info -->
+    <div class="col-12"><div class="section-title"><i class="bi bi-truck me-2"></i>Trip Information</div></div>
+
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Date</label>
+      <input type="date" class="form-control" name="date" required
+             value="{{ today }}"/>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Truck Number</label>
+      <input type="text" class="form-control" name="truck_no" list="truckList" required
+             placeholder="e.g. TN01AB1234"/>
+      <datalist id="truckList">
+        {% for t in settings.trucks %}<option value="{{ t }}">{% endfor %}
+      </datalist>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Driver Name</label>
+      <input type="text" class="form-control" name="driver_name" list="driverList" required
+             placeholder="Driver name"/>
+      <datalist id="driverList">
+        {% for d in settings.drivers %}<option value="{{ d }}">{% endfor %}
+      </datalist>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Weight (Tons)</label>
+      <input type="number" step="0.01" class="form-control" name="weight" placeholder="0.00"/>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Loading Point</label>
+      <input type="text" class="form-control" name="loading_point" required placeholder="From location"/>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Delivery Point</label>
+      <input type="text" class="form-control" name="delivery_point" required placeholder="To location"/>
+    </div>
+
+    <!-- Financial Info -->
+    <div class="col-12"><div class="section-title"><i class="bi bi-currency-rupee me-2"></i>Financial Details</div></div>
+
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Freight Amount (₹)</label>
+      <input type="number" step="0.01" class="form-control calc-input" name="freight" id="freight" placeholder="0.00" required/>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Toll Charges (₹)</label>
+      <input type="number" step="0.01" class="form-control calc-input" name="toll" id="toll" placeholder="0.00"/>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Commission Charge (₹)</label>
+      <input type="number" step="0.01" class="form-control calc-input" name="commission" id="commission" placeholder="0.00"/>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Fuel Liters (L)</label>
+      <input type="number" step="0.01" class="form-control" name="fuel_liters" placeholder="0.00"/>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Fuel Amount (₹)</label>
+      <input type="number" step="0.01" class="form-control calc-input" name="fuel_amount" id="fuel_amount" placeholder="0.00"/>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Per Trip Expenses (₹)</label>
+      <input type="number" step="0.01" class="form-control calc-input" name="expenses" id="expenses" placeholder="0.00"/>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Advance Amount (₹)</label>
+      <input type="number" step="0.01" class="form-control calc-input" name="advance" id="advance" placeholder="0.00"/>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Bill Amount (₹)</label>
+      <input type="number" step="0.01" class="form-control calc-input" name="bill_amount" id="bill_amount" placeholder="0.00"/>
+    </div>
+
+    <!-- Totals -->
+    <div class="col-12"><div class="section-title"><i class="bi bi-receipt me-2"></i>Trip Amount Summary</div></div>
+    <div class="col-md-4">
+      <div class="card text-center py-3" style="background:#FFF3CD;">
+        <div class="small fw-bold text-muted">Total Trip Amount</div>
+        <div class="fs-4 fw-bold" style="color:#7B3F00;" id="totalTripDisplay">₹ 0.00</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center py-3" id="balanceCard" style="background:#E8F5E9;">
+        <div class="small fw-bold text-muted">Balance Amount</div>
+        <div class="fs-4 fw-bold" id="balanceDisplay" style="color:#1B5E20;">₹ 0.00</div>
+      </div>
+    </div>
+    <div class="col-md-4 d-flex align-items-center gap-2">
+      <button type="submit" class="btn btn-primary btn-lg fw-bold flex-fill">
+        <i class="bi bi-save me-1"></i> Save Trip
+      </button>
+      <a href="/trips" class="btn btn-outline-secondary btn-lg">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+const today = new Date().toISOString().split('T')[0];
+document.querySelector('[name=date]').value = today;
+
+function calcTotals(){
+  const freight    = parseFloat(document.getElementById('freight').value)    || 0;
+  const toll       = parseFloat(document.getElementById('toll').value)       || 0;
+  const commission = parseFloat(document.getElementById('commission').value) || 0;
+  const fuel_amt   = parseFloat(document.getElementById('fuel_amount').value)|| 0;
+  const expenses   = parseFloat(document.getElementById('expenses').value)   || 0;
+  const advance    = parseFloat(document.getElementById('advance').value)    || 0;
+  const bill_amt   = parseFloat(document.getElementById('bill_amount').value)|| 0;
+  const total_trip = toll + commission + fuel_amt + expenses + advance;
+  const balance    = freight - total_trip - bill_amt;
+  document.getElementById('totalTripDisplay').textContent = '₹ ' + total_trip.toLocaleString('en-IN',{minimumFractionDigits:2});
+  document.getElementById('balanceDisplay').textContent   = '₹ ' + balance.toLocaleString('en-IN',{minimumFractionDigits:2});
+  const card = document.getElementById('balanceCard');
+  const disp = document.getElementById('balanceDisplay');
+  if(balance < 0){
+    card.style.background='#FFEBEE'; disp.style.color='#C62828';
+  } else {
+    card.style.background='#E8F5E9'; disp.style.color='#1B5E20';
+  }
+}
+document.querySelectorAll('.calc-input').forEach(el => el.addEventListener('input', calcTotals));
+</script>
+{% endblock %}

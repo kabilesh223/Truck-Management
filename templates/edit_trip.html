@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="company-header">
+  <h4 class="mb-0"><i class="bi bi-pencil me-2"></i>Edit Trip #{{ trip[0] }}</h4>
+</div>
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+<form method="post">
+  <div class="row g-3">
+    <div class="col-12"><div class="section-title"><i class="bi bi-truck me-2"></i>Trip Information</div></div>
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Date</label>
+      <input type="text" class="form-control" name="date" value="{{ trip[1] or '' }}" placeholder="DD-MM-YYYY" required/>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Truck Number</label>
+      <input type="text" class="form-control" name="truck_no" value="{{ trip[2] or '' }}" list="truckList" required/>
+      <datalist id="truckList">{% for t in settings.trucks %}<option value="{{ t }}">{% endfor %}</datalist>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Driver Name</label>
+      <input type="text" class="form-control" name="driver_name" value="{{ trip[3] or '' }}" list="driverList" required/>
+      <datalist id="driverList">{% for d in settings.drivers %}<option value="{{ d }}">{% endfor %}</datalist>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-bold">Weight (Tons)</label>
+      <input type="number" step="0.01" class="form-control" name="weight" value="{{ trip[6] or '' }}"/>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Loading Point</label>
+      <input type="text" class="form-control" name="loading_point" value="{{ trip[4] or '' }}" required/>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Delivery Point</label>
+      <input type="text" class="form-control" name="delivery_point" value="{{ trip[5] or '' }}" required/>
+    </div>
+
+    <div class="col-12"><div class="section-title"><i class="bi bi-currency-rupee me-2"></i>Financial Details</div></div>
+    {% set fields = [
+      ('Freight Amount (₹)', 'freight', 7),
+      ('Toll Charges (₹)', 'toll', 8),
+      ('Commission Charge (₹)', 'commission', 9),
+      ('Fuel Liters (L)', 'fuel_liters', 10),
+      ('Fuel Amount (₹)', 'fuel_amount', 11),
+      ('Per Trip Expenses (₹)', 'expenses', 12),
+      ('Advance Amount (₹)', 'advance', 13),
+      ('Bill Amount (₹)', 'bill_amount', 14),
+    ] %}
+    {% for label, name, idx in fields %}
+    <div class="col-md-3">
+      <label class="form-label fw-bold">{{ label }}</label>
+      <input type="number" step="0.01" class="form-control calc-input" name="{{ name }}" id="{{ name }}"
+             value="{{ trip[idx] or '' }}" placeholder="0.00"/>
+    </div>
+    {% endfor %}
+
+    <div class="col-12"><div class="section-title"><i class="bi bi-receipt me-2"></i>Summary</div></div>
+    <div class="col-md-4">
+      <div class="card text-center py-3" style="background:#FFF3CD;">
+        <div class="small fw-bold text-muted">Total Trip Amount</div>
+        <div class="fs-4 fw-bold" style="color:#7B3F00;" id="totalTripDisplay">₹ {{ "%.2f"|format((trip[15] or 0)|float) }}</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center py-3" id="balanceCard"
+           style="background:{% if trip[16] and trip[16]|float < 0 %}#FFEBEE{% else %}#E8F5E9{% endif %};">
+        <div class="small fw-bold text-muted">Balance Amount</div>
+        <div class="fs-4 fw-bold" id="balanceDisplay"
+             style="color:{% if trip[16] and trip[16]|float < 0 %}#C62828{% else %}#1B5E20{% endif %};">
+          ₹ {{ "%.2f"|format((trip[16] or 0)|float) }}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 d-flex align-items-center gap-2">
+      <button type="submit" class="btn btn-primary btn-lg fw-bold flex-fill">
+        <i class="bi bi-save me-1"></i> Save Changes
+      </button>
+      <a href="/trips" class="btn btn-outline-secondary btn-lg">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+function calcTotals(){
+  const freight    = parseFloat(document.getElementById('freight').value)    || 0;
+  const toll       = parseFloat(document.getElementById('toll').value)       || 0;
+  const commission = parseFloat(document.getElementById('commission').value) || 0;
+  const fuel_amt   = parseFloat(document.getElementById('fuel_amount').value)|| 0;
+  const expenses   = parseFloat(document.getElementById('expenses').value)   || 0;
+  const advance    = parseFloat(document.getElementById('advance').value)    || 0;
+  const bill_amt   = parseFloat(document.getElementById('bill_amount').value)|| 0;
+  const total_trip = toll + commission + fuel_amt + expenses + advance;
+  const balance    = freight - total_trip - bill_amt;
+  document.getElementById('totalTripDisplay').textContent = '₹ ' + total_trip.toLocaleString('en-IN',{minimumFractionDigits:2});
+  document.getElementById('balanceDisplay').textContent   = '₹ ' + balance.toLocaleString('en-IN',{minimumFractionDigits:2});
+  const card = document.getElementById('balanceCard');
+  const disp = document.getElementById('balanceDisplay');
+  if(balance < 0){ card.style.background='#FFEBEE'; disp.style.color='#C62828'; }
+  else { card.style.background='#E8F5E9'; disp.style.color='#1B5E20'; }
+}
+document.querySelectorAll('.calc-input').forEach(el => el.addEventListener('input', calcTotals));
+</script>
+{% endblock %}

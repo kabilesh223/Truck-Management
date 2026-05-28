@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{{ settings.company_name }} - Trip Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    body { background:#f0f4fa; font-family:'Segoe UI',sans-serif; }
+    .navbar { background:#1F4E79 !important; }
+    .navbar-brand, .nav-link { color:#fff !important; font-weight:600; }
+    .nav-link:hover, .nav-link.active { color:#FFD700 !important; }
+    .sidebar { background:#1F4E79; min-height:100vh; padding-top:20px; }
+    .sidebar .nav-link { color:#AED6F1; padding:10px 20px; border-radius:8px; margin:2px 8px; }
+    .sidebar .nav-link:hover, .sidebar .nav-link.active { background:#2E75B6; color:#FFD700 !important; }
+    .sidebar .nav-link i { margin-right:8px; }
+    .main-content { padding:24px; }
+    .card { border:none; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,.08); }
+    .card-header { background:#1F4E79; color:#fff; border-radius:12px 12px 0 0 !important; font-weight:700; }
+    .btn-primary { background:#1F4E79; border-color:#1F4E79; }
+    .btn-primary:hover { background:#2E75B6; border-color:#2E75B6; }
+    .kpi-card { border-radius:12px; color:#fff; padding:20px; text-align:center; }
+    .kpi-card .kpi-val { font-size:1.8rem; font-weight:700; }
+    .kpi-card .kpi-lbl { font-size:.85rem; opacity:.85; }
+    .table thead th { background:#1F4E79; color:#fff; border:none; }
+    .table tbody tr:hover { background:#e8f0fe; }
+    .neg-balance { background:#ffebee !important; }
+    .badge-balance-pos { background:#27AE60; }
+    .badge-balance-neg { background:#E74C3C; }
+    .section-title { background:#2E75B6; color:#fff; padding:8px 16px; border-radius:8px; font-weight:700; margin:16px 0 8px; }
+    .company-header { background:#1F4E79; color:#fff; padding:12px 24px; border-radius:12px; margin-bottom:20px; }
+  </style>
+</head>
+<body>
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-2 sidebar d-none d-md-block">
+      <div class="text-center mb-4 px-2">
+        <div style="font-size:2rem;">🚛</div>
+        <div style="color:#FFD700;font-weight:700;font-size:.9rem;">{{ settings.company_name }}</div>
+        <div style="color:#AED6F1;font-size:.75rem;">Trip Management</div>
+      </div>
+      <nav class="nav flex-column">
+        <a class="nav-link {% if request.endpoint=='trips_view' %}active{% endif %}" href="/trips">
+          <i class="bi bi-table"></i> All Trips</a>
+        <a class="nav-link {% if request.endpoint=='new_trip' %}active{% endif %}" href="/new_trip">
+          <i class="bi bi-plus-circle"></i> New Trip</a>
+        <a class="nav-link {% if request.endpoint=='dashboard' %}active{% endif %}" href="/dashboard">
+          <i class="bi bi-bar-chart"></i> Dashboard</a>
+        <a class="nav-link {% if request.endpoint=='reports' %}active{% endif %}" href="/reports">
+          <i class="bi bi-file-earmark-excel"></i> Reports</a>
+        <a class="nav-link {% if request.endpoint=='settings_view' %}active{% endif %}" href="/settings">
+          <i class="bi bi-gear"></i> Settings</a>
+      </nav>
+    </div>
+    <!-- Main -->
+    <div class="col-md-10 main-content">
+      <!-- Mobile nav -->
+      <nav class="navbar navbar-expand-md rounded mb-3 d-md-none">
+        <span class="navbar-brand">🚛 {{ settings.company_name }}</span>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mobileNav">
+          <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link" href="/trips">All Trips</a></li>
+            <li class="nav-item"><a class="nav-link" href="/new_trip">New Trip</a></li>
+            <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="/reports">Reports</a></li>
+            <li class="nav-item"><a class="nav-link" href="/settings">Settings</a></li>
+          </ul>
+        </div>
+      </nav>
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
