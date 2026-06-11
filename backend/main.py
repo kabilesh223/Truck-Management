@@ -1,12 +1,15 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 import io, os, json, shutil
 from database import init_db, get_db_trips, save_db_trip, update_db_trip, delete_db_trip, get_settings, save_settings
 from report import build_report
+from auth import (Token, UserIn, load_users, save_users, hash_password,
+                  verify_password, create_token, get_current_user)
 
 app = FastAPI(title="Truck Management API")
 
@@ -57,6 +60,28 @@ def calc_totals(d: TripIn):
     balance    = d.freight - total_trip - d.bill_amount
     return round(total_trip, 2), round(balance, 2)
 
+# ── Auth Routes ───────────────────────────────
+@app.post("/api/auth/login", response_model=Token)
+def login(form: OAuth2PasswordRequestForm = Depends()):
+    users = load_users()
+    if form.username not in users or not verify_password(form.password, users[form.username]):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    token = create_token(form.username)
+    return {"access_token": token, "token_type": "bearer", "username": form.username}
+
+@app.post("/api/auth/register")
+def register(user: UserIn):
+    users = load_users()
+    if user.username in users:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    users[user.username] = hash_password(user.password)
+    save_users(users)
+    return {"message": "User registered successfully"}
+
+@app.get("/api/auth/me")
+def me(current_user: str = Depends(get_current_user)):
+    return {"username": current_user}
+
 # ── Trip Routes ───────────────────────────────
 @app.get("/api/trips")
 def list_trips(
@@ -65,6 +90,7 @@ def list_trips(
     driver: str = Query("All"),
     date_from: str = Query(""),
     date_to: str   = Query(""),
+    current_user: str = Depends(get_current_user),
 ):
     trips = get_db_trips()
     result = []
@@ -90,7 +116,7 @@ def list_trips(
     return {"trips": result, "total_freight": total_freight, "total_balance": total_balance}
 
 @app.post("/api/trips", status_code=201)
-def create_trip(trip: TripIn):
+def create_trip(trip: TripIn, current_user: str = Depends(get_current_user)):
     total_trip, balance = calc_totals(trip)
     s = get_settings()
     if trip.truck_no and trip.truck_no not in s["trucks"]:
@@ -103,7 +129,7 @@ def create_trip(trip: TripIn):
     return {"id": trip_id, "message": "Trip saved"}
 
 @app.get("/api/trips/{trip_id}")
-def get_trip(trip_id: int):
+def get_trip(trip_id: int, current_user: str = Depends(get_current_user)):
     trips = get_db_trips()
     t = next((x for x in trips if x["id"] == trip_id), None)
     if not t:
@@ -111,19 +137,19 @@ def get_trip(trip_id: int):
     return t
 
 @app.put("/api/trips/{trip_id}")
-def update_trip(trip_id: int, trip: TripIn):
+def update_trip(trip_id: int, trip: TripIn, current_user: str = Depends(get_current_user)):
     total_trip, balance = calc_totals(trip)
     update_db_trip(trip_id, {**trip.model_dump(), "total_trip_amount": total_trip, "balance_amount": balance})
     return {"message": "Trip updated"}
 
 @app.delete("/api/trips/{trip_id}")
-def delete_trip(trip_id: int):
+def delete_trip(trip_id: int, current_user: str = Depends(get_current_user)):
     delete_db_trip(trip_id)
     return {"message": "Trip deleted"}
 
 # ── Dashboard ─────────────────────────────────
 @app.get("/api/dashboard")
-def dashboard():
+def dashboard(current_user: str = Depends(get_current_user)):
     trips = get_db_trips()
     total_trips   = len(trips)
     total_freight = sum(float(t["freight"] or 0) for t in trips)
@@ -157,11 +183,11 @@ def dashboard():
 
 # ── Settings ──────────────────────────────────
 @app.get("/api/settings")
-def get_settings_route():
+def get_settings_route(current_user: str = Depends(get_current_user)):
     return get_settings()
 
 @app.post("/api/settings")
-def update_settings(s: SettingsIn):
+def update_settings(s: SettingsIn, current_user: str = Depends(get_current_user)):
     save_settings(s.model_dump())
     return {"message": "Settings saved"}
 

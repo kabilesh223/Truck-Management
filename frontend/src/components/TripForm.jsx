@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 
-const fmt = (v) => v === '' || v === null || v === undefined ? '' : v
-
 export default function TripForm({ initial = {}, settings = {}, onSubmit, loading }) {
   const today = new Date().toISOString().split('T')[0]
   const [form, setForm] = useState({
@@ -26,32 +24,25 @@ export default function TripForm({ initial = {}, settings = {}, onSubmit, loadin
     setBalance(freight - tt - bill_amt)
   }, [form])
 
-  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
 
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault()
     const payload = {}
+    const numKeys = ['weight','freight','toll','commission','fuel_liters',
+                     'fuel_amount','expenses','advance','bill_amount']
     Object.keys(form).forEach(k => {
-      payload[k] = ['weight','freight','toll','commission','fuel_liters','fuel_amount',
-                    'expenses','advance','bill_amount'].includes(k)
-        ? parseFloat(form[k]) || 0 : form[k]
+      payload[k] = numKeys.includes(k) ? parseFloat(form[k]) || 0 : form[k]
     })
     onSubmit(payload)
   }
 
-  const inp = "w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-  const lbl = "block text-sm font-semibold text-slate-700 mb-1"
+  const inp = "w-full border-2 border-gray-100 bg-gray-50 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
+  const lbl = "block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide"
 
-  const Field = ({ label, name, type = 'text', list, required }) => (
-    <div>
-      <label className={lbl}>{label}</label>
-      <input className={inp} type={type} value={fmt(form[name])} onChange={set(name)}
-             list={list} required={required} step={type==='number'?'0.01':undefined}
-             placeholder={type==='number'?'0.00':undefined}/>
-      {list && <datalist id={list}>
-        {(name==='truck_no' ? settings.trucks : settings.drivers)?.map(v =>
-          <option key={v} value={v}/>)}
-      </datalist>}
+  const SectionTitle = ({ icon, text }) => (
+    <div className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm mb-4">
+      <span>{icon}</span> {text}
     </div>
   )
 
@@ -59,62 +50,95 @@ export default function TripForm({ initial = {}, settings = {}, onSubmit, loadin
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Trip Info */}
       <div>
-        <div className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm mb-3">
-          📦 Trip Information
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Field label="Date" name="date" type="date" required/>
-          <Field label="Truck Number" name="truck_no" list="truckList" required/>
-          <Field label="Driver Name" name="driver_name" list="driverList" required/>
-          <Field label="Weight (Tons)" name="weight" type="number"/>
-          <div className="col-span-2">
-            <Field label="Loading Point" name="loading_point" required/>
+        <SectionTitle icon="📦" text="Trip Information" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label className={lbl}>Date</label>
+            <input className={inp} type="date" value={form.date ?? today} onChange={set('date')} required/>
           </div>
-          <div className="col-span-2">
-            <Field label="Delivery Point" name="delivery_point" required/>
+          <div>
+            <label className={lbl}>Truck Number</label>
+            <input className={inp} type="text" value={form.truck_no ?? ''} onChange={set('truck_no')}
+                   list="truckList" required placeholder="e.g. TN01AB1234"/>
+            <datalist id="truckList">
+              {settings.trucks?.map(t => <option key={t} value={t}/>)}
+            </datalist>
+          </div>
+          <div>
+            <label className={lbl}>Driver Name</label>
+            <input className={inp} type="text" value={form.driver_name ?? ''} onChange={set('driver_name')}
+                   list="driverList" required placeholder="Driver name"/>
+            <datalist id="driverList">
+              {settings.drivers?.map(d => <option key={d} value={d}/>)}
+            </datalist>
+          </div>
+          <div>
+            <label className={lbl}>Weight (Tons)</label>
+            <input className={inp} type="number" step="0.01" value={form.weight ?? ''} onChange={set('weight')} placeholder="0.00"/>
+          </div>
+          <div className="sm:col-span-2">
+            <label className={lbl}>Loading Point</label>
+            <input className={inp} type="text" value={form.loading_point ?? ''} onChange={set('loading_point')} required placeholder="From location"/>
+          </div>
+          <div className="sm:col-span-2">
+            <label className={lbl}>Delivery Point</label>
+            <input className={inp} type="text" value={form.delivery_point ?? ''} onChange={set('delivery_point')} required placeholder="To location"/>
           </div>
         </div>
       </div>
 
       {/* Financial */}
       <div>
-        <div className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm mb-3">
-          💰 Financial Details
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Field label="Freight Amount (₹)" name="freight" type="number" required/>
-          <Field label="Toll Charges (₹)" name="toll" type="number"/>
-          <Field label="Commission (₹)" name="commission" type="number"/>
-          <Field label="Fuel Liters (L)" name="fuel_liters" type="number"/>
-          <Field label="Fuel Amount (₹)" name="fuel_amount" type="number"/>
-          <Field label="Expenses (₹)" name="expenses" type="number"/>
-          <Field label="Advance (₹)" name="advance" type="number"/>
-          <Field label="Bill Amount (₹)" name="bill_amount" type="number"/>
+        <SectionTitle icon="💰" text="Financial Details" />
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            ['Freight (₹)', 'freight', true],
+            ['Toll (₹)', 'toll'],
+            ['Commission (₹)', 'commission'],
+            ['Fuel Liters (L)', 'fuel_liters'],
+            ['Fuel Amount (₹)', 'fuel_amount'],
+            ['Expenses (₹)', 'expenses'],
+            ['Advance (₹)', 'advance'],
+            ['Bill Amount (₹)', 'bill_amount'],
+          ].map(([label, key, req]) => (
+            <div key={key}>
+              <label className={lbl}>{label}</label>
+              <input className={inp} type="number" step="0.01"
+                     value={form[key] ?? ''} onChange={set(key)}
+                     placeholder="0.00" required={req}/>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Summary */}
       <div>
-        <div className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm mb-3">
-          🧾 Summary
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
-            <div className="text-xs text-slate-500 font-semibold">Total Trip Amount</div>
-            <div className="text-2xl font-bold text-amber-700 mt-1">
+        <SectionTitle icon="🧾" text="Summary" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-2xl p-4 text-center">
+            <div className="text-xs font-bold text-amber-600 uppercase tracking-wide mb-1">Total Trip Amount</div>
+            <div className="text-2xl font-black text-amber-700">
               ₹{totalTrip.toLocaleString('en-IN', {minimumFractionDigits:2})}
             </div>
           </div>
-          <div className={`border rounded-xl p-4 text-center ${balance < 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
-            <div className="text-xs text-slate-500 font-semibold">Balance Amount</div>
-            <div className={`text-2xl font-bold mt-1 ${balance < 0 ? 'text-red-700' : 'text-green-700'}`}>
+          <div className={`border-2 rounded-2xl p-4 text-center transition-all ${
+            balance < 0
+              ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200'
+              : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
+          }`}>
+            <div className={`text-xs font-bold uppercase tracking-wide mb-1 ${balance < 0 ? 'text-red-600' : 'text-green-600'}`}>
+              Balance Amount
+            </div>
+            <div className={`text-2xl font-black ${balance < 0 ? 'text-red-700' : 'text-green-700'}`}>
               ₹{balance.toLocaleString('en-IN', {minimumFractionDigits:2})}
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center">
             <button type="submit" disabled={loading}
-              className="flex-1 bg-[#1F4E79] hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-60">
-              {loading ? 'Saving...' : '💾 Save Trip'}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700
+                text-white font-black py-4 rounded-2xl text-sm shadow-lg
+                disabled:opacity-60 transition-all transform hover:scale-[1.02] active:scale-95">
+              {loading ? '⏳ Saving...' : '💾 Save Trip'}
             </button>
           </div>
         </div>
