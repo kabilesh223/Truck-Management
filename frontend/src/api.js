@@ -24,11 +24,8 @@ api.interceptors.response.use(
   }
 )
 
-export const login    = (username, password) => {
-  const form = new URLSearchParams()
-  form.append('username', username)
-  form.append('password', password)
-  return api.post('/auth/login', form, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+export const login = (username, password) => {
+  return api.post('/auth/login', { username, password })
 }
 export const register  = (data)   => api.post('/auth/register', data)
 export const getMe     = ()       => api.get('/auth/me')
@@ -37,15 +34,27 @@ export const getTrip   = (id)     => api.get(`/trips/${id}`)
 export const createTrip= (data)   => api.post('/trips', data)
 export const updateTrip= (id, d)  => api.put(`/trips/${id}`, d)
 export const deleteTrip= (id)     => api.delete(`/trips/${id}`)
-export const getDashboard = ()    => api.get('/dashboard')
+export const getDashboard = ()    => api.get('/trips/dashboard')
 export const getSettings  = ()    => api.get('/settings')
 export const saveSettings = (d)   => api.post('/settings', d)
 export const doBackup     = ()    => api.post('/backup')
-export const getReport    = (params) => {
+export const getReport = (params) => {
   const base = import.meta.env.VITE_API_URL || ''
   const token = localStorage.getItem('token')
-  const qs = new URLSearchParams({...params, token}).toString()
-  window.open(`${base}/api/report?${qs}`, '_blank')
+  const qs = new URLSearchParams(params).toString()
+  // Open in new tab with token in header via fetch and blob download
+  fetch(`${base}/api/report?${qs}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  .then(r => r.blob())
+  .then(blob => {
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `report_${params.report_type || 'full'}.xlsx`
+    a.click()
+    window.URL.revokeObjectURL(url)
+  })
 }
 
 export default api

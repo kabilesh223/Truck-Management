@@ -16,16 +16,18 @@ export default function Login() {
     e.preventDefault(); setError(''); setLoading(true)
     try {
       const r = await login(username, password)
-      localStorage.setItem('token', r.data.access_token)
-      localStorage.setItem('username', r.data.username)
+      const token = r.data.accessToken || r.data.access_token
+      const uname = r.data.username
+      localStorage.setItem('token', token)
+      localStorage.setItem('username', uname)
       navigate('/trips')
     } catch(e) {
-      setError(e.response?.data?.detail || 'Login failed. Check your credentials.')
+      setError(e.response?.data?.detail || e.response?.data?.message || 'Login failed. Check your credentials.')
     } finally { setLoading(false) }
   }
 
   const handleRegister = async (e) => {
-    e.preventDefault(); setError(''); 
+    e.preventDefault(); setError('')
     if (password !== confirm) { setError('Passwords do not match'); return }
     if (password.length < 6)  { setError('Password must be at least 6 characters'); return }
     setLoading(true)
@@ -33,11 +35,12 @@ export default function Login() {
       const { register } = await import('../api')
       await register({ username, password })
       const r = await login(username, password)
-      localStorage.setItem('token', r.data.access_token)
+      const token = r.data.accessToken || r.data.access_token
+      localStorage.setItem('token', token)
       localStorage.setItem('username', r.data.username)
       navigate('/trips')
     } catch(e) {
-      setError(e.response?.data?.detail || 'Registration failed.')
+      setError(e.response?.data?.detail || e.response?.data?.message || 'Registration failed.')
     } finally { setLoading(false) }
   }
 

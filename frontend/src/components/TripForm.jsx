@@ -19,9 +19,9 @@ export default function TripForm({ initial = {}, settings = {}, onSubmit, loadin
     const expenses   = parseFloat(form.expenses)   || 0
     const advance    = parseFloat(form.advance)    || 0
     const bill_amt   = parseFloat(form.bill_amount)|| 0
-    const tt = toll + commission + fuel_amt + expenses + advance
+    const tt = toll + commission + fuel_amt + expenses
     setTotalTrip(tt)
-    setBalance(freight - tt - bill_amt)
+    setBalance(freight - tt - advance - bill_amt)
   }, [form])
 
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
