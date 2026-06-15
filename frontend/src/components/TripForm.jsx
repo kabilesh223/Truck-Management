@@ -98,14 +98,30 @@ export default function TripForm({ initial = {}, settings = {}, onSubmit, loadin
             ['Fuel Liters (L)', 'fuel_liters'],
             ['Fuel Amount (₹)', 'fuel_amount'],
             ['Expenses (₹)', 'expenses'],
-            ['Advance (₹)', 'advance'],
-            ['Bill Amount (₹)', 'bill_amount'],
           ].map(([label, key, req]) => (
             <div key={key}>
               <label className={lbl}>{label}</label>
               <input className={inp} type="number" step="0.01"
                      value={form[key] ?? ''} onChange={set(key)}
                      placeholder="0.00" required={req}/>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Truck Bill */}
+      <div>
+        <SectionTitle icon="🧾" text="Truck Bill" />
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            ['Bill Amount (₹)', 'bill_amount'],
+            ['Advance (₹)', 'advance'],
+          ].map(([label, key]) => (
+            <div key={key}>
+              <label className={lbl}>{label}</label>
+              <input className={inp} type="number" step="0.01"
+                     value={form[key] ?? ''} onChange={set(key)}
+                     placeholder="0.00"/>
             </div>
           ))}
         </div>
