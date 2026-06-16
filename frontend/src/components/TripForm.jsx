@@ -19,9 +19,9 @@ export default function TripForm({ initial = {}, settings = {}, onSubmit, loadin
     const expenses   = parseFloat(form.expenses)   || 0
     const advance    = parseFloat(form.advance)    || 0
     const bill_amt   = parseFloat(form.bill_amount)|| 0
-    const tt = toll + commission + fuel_amt + expenses
+    const tt = (freight + toll + commission + fuel_amt + expenses) - (bill_amt + advance)
     setTotalTrip(tt)
-    setBalance(freight - tt - advance - bill_amt)
+    setBalance(0)
   }, [form])
 
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
@@ -130,23 +130,14 @@ export default function TripForm({ initial = {}, settings = {}, onSubmit, loadin
       {/* Summary */}
       <div>
         <SectionTitle icon="🧾" text="Summary" />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-2xl p-4 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-2xl p-5 text-center">
             <div className="text-xs font-bold text-amber-600 uppercase tracking-wide mb-1">Total Trip Amount</div>
-            <div className="text-2xl font-black text-amber-700">
+            <div className="text-3xl font-black text-amber-700 mt-1">
               ₹{totalTrip.toLocaleString('en-IN', {minimumFractionDigits:2})}
             </div>
-          </div>
-          <div className={`border-2 rounded-2xl p-4 text-center transition-all ${
-            balance < 0
-              ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200'
-              : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
-          }`}>
-            <div className={`text-xs font-bold uppercase tracking-wide mb-1 ${balance < 0 ? 'text-red-600' : 'text-green-600'}`}>
-              Balance Amount
-            </div>
-            <div className={`text-2xl font-black ${balance < 0 ? 'text-red-700' : 'text-green-700'}`}>
-              ₹{balance.toLocaleString('en-IN', {minimumFractionDigits:2})}
+            <div className="text-xs text-amber-500 mt-2">
+              (Freight + Toll + Commission + Fuel + Expenses) − (Bill + Advance)
             </div>
           </div>
           <div className="flex items-center">
