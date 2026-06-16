@@ -80,9 +80,9 @@ body {
 
 /* Input */
 .inp {
-  background: rgba(15, 26, 21, 0.8);
-  border: 1.5px solid rgba(46,204,113,0.18);
-  color: #E8F5E9;
+  background: rgba(15, 26, 21, 0.9) !important;
+  border: 1.5px solid rgba(46,204,113,0.25) !important;
+  color: #E8F5E9 !important;
   border-radius: 10px;
   padding: 11px 14px;
   width: 100%;
@@ -90,12 +90,31 @@ body {
   font-family: 'Plus Jakarta Sans', sans-serif;
   transition: all 0.25s;
   outline: none;
+  -webkit-text-fill-color: #E8F5E9;
+  opacity: 1;
 }
 .inp:focus {
-  border-color: #2ECC71;
+  border-color: #2ECC71 !important;
   box-shadow: 0 0 0 3px rgba(46,204,113,0.12);
+  background: rgba(15, 26, 21, 1) !important;
 }
-.inp::placeholder { color: rgba(232,245,233,0.25); }
+.inp::placeholder { color: rgba(232,245,233,0.3) !important; }
+.inp option {
+  background: #1D2E28;
+  color: #E8F5E9;
+}
+.inp:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* Fix for iOS/Safari autofill */
+.inp:-webkit-autofill,
+.inp:-webkit-autofill:hover,
+.inp:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #0F1A15 inset !important;
+  -webkit-text-fill-color: #E8F5E9 !important;
+  border-color: rgba(46,204,113,0.25) !important;
+}
 .inp-label {
   display: block;
   font-size: 11px;
