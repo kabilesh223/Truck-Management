@@ -1,201 +1,223 @@
-import { useState, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 
-const S = {
-  card: {
-    background: 'rgba(29,46,40,0.8)',
-    border: '1px solid rgba(46,204,113,0.15)',
-    borderRadius: '14px',
-    padding: '20px',
-    marginBottom: '16px'
-  },
-  label: {
-    display: 'block',
-    fontSize: '11px',
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-    color: 'rgba(232,245,233,0.5)',
-    marginBottom: '6px'
-  },
-  input: {
-    display: 'block',
-    width: '100%',
-    background: '#0F1A15',
-    border: '1.5px solid rgba(46,204,113,0.3)',
-    borderRadius: '10px',
-    padding: '11px 14px',
-    fontSize: '14px',
-    color: '#E8F5E9',
-    fontFamily: 'inherit',
-    outline: 'none',
-    boxSizing: 'border-box',
-    WebkitTextFillColor: '#E8F5E9',
-    opacity: '1',
-    cursor: 'text'
-  },
-  sectionTitle: {
-    fontSize: '11px',
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: '0.1em',
-    color: '#2ECC71',
-    borderLeft: '3px solid #2ECC71',
-    paddingLeft: '10px',
-    marginBottom: '16px'
-  },
-  totalBox: {
-    background: 'rgba(46,204,113,0.08)',
-    border: '1px solid rgba(46,204,113,0.2)',
-    borderRadius: '12px',
-    padding: '20px',
-    textAlign: 'center'
-  },
-  btn: {
-    width: '100%',
-    background: 'linear-gradient(135deg,#2ECC71,#27AE60)',
-    color: '#0F1A15',
-    fontWeight: '800',
-    fontSize: '14px',
-    border: 'none',
-    borderRadius: '12px',
-    padding: '14px',
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    letterSpacing: '0.02em'
-  }
+const cardStyle = {
+  background: 'rgba(29,46,40,0.8)',
+  border: '1px solid rgba(46,204,113,0.15)',
+  borderRadius: '14px',
+  padding: '20px',
+  marginBottom: '16px'
+}
+const labelStyle = {
+  display: 'block',
+  fontSize: '11px',
+  fontWeight: '700',
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  color: 'rgba(232,245,233,0.5)',
+  marginBottom: '6px'
+}
+const inputStyle = {
+  display: 'block',
+  width: '100%',
+  background: '#0F1A15',
+  border: '1.5px solid rgba(46,204,113,0.3)',
+  borderRadius: '10px',
+  padding: '11px 14px',
+  fontSize: '14px',
+  color: '#E8F5E9',
+  fontFamily: 'inherit',
+  outline: 'none',
+  boxSizing: 'border-box',
+  cursor: 'text'
+}
+const sectionStyle = {
+  fontSize: '11px',
+  fontWeight: '700',
+  textTransform: 'uppercase',
+  letterSpacing: '0.1em',
+  color: '#2ECC71',
+  borderLeft: '3px solid #2ECC71',
+  paddingLeft: '10px',
+  marginBottom: '16px'
+}
+
+function calcTotal(form) {
+  const freight    = parseFloat(form.freight)    || 0
+  const toll       = parseFloat(form.toll)       || 0
+  const commission = parseFloat(form.commission) || 0
+  const fuel_amt   = parseFloat(form.fuel_amount)|| 0
+  const expenses   = parseFloat(form.expenses)   || 0
+  const advance    = parseFloat(form.advance)    || 0
+  const bill_amt   = parseFloat(form.bill_amount)|| 0
+  return (bill_amt + advance) - (freight + toll + commission + fuel_amt + expenses)
 }
 
 export default function TripForm({ initial = {}, settings = {}, onSubmit, loading }) {
   const today = new Date().toISOString().split('T')[0]
-  const [form, setForm] = useState({
-    date: today, truck_no: '', driver_name: '',
-    loading_point: '', delivery_point: '', weight: '',
-    freight: '', toll: '', commission: '',
-    fuel_liters: '', fuel_amount: '', expenses: '',
-    advance: '', bill_amount: '',
-    ...initial
-  })
-  const [totalTrip, setTotalTrip] = useState(0)
 
-  useEffect(() => {
-    const freight    = parseFloat(form.freight)    || 0
-    const toll       = parseFloat(form.toll)       || 0
-    const commission = parseFloat(form.commission) || 0
-    const fuel_amt   = parseFloat(form.fuel_amount)|| 0
-    const expenses   = parseFloat(form.expenses)   || 0
-    const advance    = parseFloat(form.advance)    || 0
-    const bill_amt   = parseFloat(form.bill_amount)|| 0
-    setTotalTrip((bill_amt + advance) - (freight + toll + commission + fuel_amt + expenses))
-  }, [form])
+  const [date,           setDate]          = useState(initial.date           ?? today)
+  const [truck_no,       setTruckNo]       = useState(initial.truck_no       ?? '')
+  const [driver_name,    setDriverName]    = useState(initial.driver_name    ?? '')
+  const [loading_point,  setLoadingPoint]  = useState(initial.loading_point  ?? '')
+  const [delivery_point, setDeliveryPoint] = useState(initial.delivery_point ?? '')
+  const [weight,         setWeight]        = useState(initial.weight         ?? '')
+  const [freight,        setFreight]       = useState(initial.freight        ?? '')
+  const [toll,           setToll]          = useState(initial.toll           ?? '')
+  const [commission,     setCommission]    = useState(initial.commission     ?? '')
+  const [fuel_liters,    setFuelLiters]    = useState(initial.fuel_liters    ?? '')
+  const [fuel_amount,    setFuelAmount]    = useState(initial.fuel_amount    ?? '')
+  const [expenses,       setExpenses]      = useState(initial.expenses       ?? '')
+  const [advance,        setAdvance]       = useState(initial.advance        ?? '')
+  const [bill_amount,    setBillAmount]    = useState(initial.bill_amount    ?? '')
 
-  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+  const form = {
+    date, truck_no, driver_name, loading_point, delivery_point,
+    weight, freight, toll, commission, fuel_liters,
+    fuel_amount, expenses, advance, bill_amount
+  }
+
+  const totalTrip = calcTotal(form)
 
   const handleSubmit = e => {
     e.preventDefault()
-    const numKeys = ['weight','freight','toll','commission','fuel_liters',
-                     'fuel_amount','expenses','advance','bill_amount']
-    const payload = {}
-    Object.keys(form).forEach(k => {
-      payload[k] = numKeys.includes(k) ? parseFloat(form[k]) || 0 : form[k]
+    onSubmit({
+      date, truck_no, driver_name, loading_point, delivery_point,
+      weight:      parseFloat(weight)      || 0,
+      freight:     parseFloat(freight)     || 0,
+      toll:        parseFloat(toll)        || 0,
+      commission:  parseFloat(commission)  || 0,
+      fuel_liters: parseFloat(fuel_liters) || 0,
+      fuel_amount: parseFloat(fuel_amount) || 0,
+      expenses:    parseFloat(expenses)    || 0,
+      advance:     parseFloat(advance)     || 0,
+      bill_amount: parseFloat(bill_amount) || 0,
     })
-    onSubmit(payload)
   }
 
-  const Field = ({ label, name, type = 'text', list, required, colSpan }) => (
-    <div style={colSpan ? { gridColumn: `span ${colSpan}` } : {}}>
-      <label style={S.label}>{label}</label>
-      <input
-        style={S.input}
-        type={type}
-        value={form[name] ?? ''}
-        onChange={set(name)}
-        list={list}
-        required={required}
-        step={type === 'number' ? '0.01' : undefined}
-        placeholder={type === 'number' ? '0.00' : ''}
-        autoComplete="off"
-        onFocus={e => { e.target.style.borderColor = '#2ECC71'; e.target.style.boxShadow = '0 0 0 3px rgba(46,204,113,0.12)' }}
-        onBlur={e => { e.target.style.borderColor = 'rgba(46,204,113,0.3)'; e.target.style.boxShadow = 'none' }}
-      />
-      {list && (
-        <datalist id={list}>
-          {(name === 'truck_no' ? settings.trucks : settings.drivers)?.map(v =>
-            <option key={v} value={v} />
-          )}
-        </datalist>
-      )}
-    </div>
-  )
-
-  const gridStyle = (cols) => ({
-    display: 'grid',
-    gridTemplateColumns: `repeat(${cols}, 1fr)`,
-    gap: '16px'
+  const inp = (value, setter, extra = {}) => ({
+    style: inputStyle,
+    value: value,
+    onChange: e => setter(e.target.value),
+    autoComplete: 'off',
+    onFocus: e => {
+      e.target.style.borderColor = '#2ECC71'
+      e.target.style.boxShadow = '0 0 0 3px rgba(46,204,113,0.12)'
+    },
+    onBlur: e => {
+      e.target.style.borderColor = 'rgba(46,204,113,0.3)'
+      e.target.style.boxShadow = 'none'
+    },
+    ...extra
   })
+
+  const grid2 = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }
+  const grid3 = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }
 
   return (
     <form onSubmit={handleSubmit}>
 
       {/* Trip Information */}
-      <div style={S.card}>
-        <div style={S.sectionTitle}>Trip Information</div>
-        <div style={{display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:'16px'}}>
-          <Field label="Date" name="date" type="date" required />
-          <Field label="Truck Number" name="truck_no" list="truckList" required />
-          <Field label="Driver Name" name="driver_name" list="driverList" required />
-          <Field label="Weight (Tons)" name="weight" type="number" />
-          <div style={{gridColumn:'span 2'}}>
-            <Field label="Loading Point" name="loading_point" required />
+      <div style={cardStyle}>
+        <div style={sectionStyle}>Trip Information</div>
+        <div style={grid2}>
+          <div>
+            <label style={labelStyle}>Date</label>
+            <input {...inp(date, setDate)} type="date" required/>
+          </div>
+          <div>
+            <label style={labelStyle}>Truck Number</label>
+            <input {...inp(truck_no, setTruckNo)} list="truckList" required placeholder="e.g. TN01AB1234"/>
+            <datalist id="truckList">{settings.trucks?.map(t=><option key={t} value={t}/>)}</datalist>
+          </div>
+          <div>
+            <label style={labelStyle}>Driver Name</label>
+            <input {...inp(driver_name, setDriverName)} list="driverList" required placeholder="Driver name"/>
+            <datalist id="driverList">{settings.drivers?.map(d=><option key={d} value={d}/>)}</datalist>
+          </div>
+          <div>
+            <label style={labelStyle}>Weight (Tons)</label>
+            <input {...inp(weight, setWeight)} type="number" step="0.01" placeholder="0.00"/>
           </div>
           <div style={{gridColumn:'span 2'}}>
-            <Field label="Delivery Point" name="delivery_point" required />
+            <label style={labelStyle}>Loading Point</label>
+            <input {...inp(loading_point, setLoadingPoint)} required placeholder="From location"/>
+          </div>
+          <div style={{gridColumn:'span 2'}}>
+            <label style={labelStyle}>Delivery Point</label>
+            <input {...inp(delivery_point, setDeliveryPoint)} required placeholder="To location"/>
           </div>
         </div>
       </div>
 
       {/* Financial Details */}
-      <div style={S.card}>
-        <div style={S.sectionTitle}>Financial Details</div>
-        <div style={{display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:'16px'}}>
-          <Field label="Freight Amount (Rs)" name="freight" type="number" required />
-          <Field label="Toll Charges (Rs)" name="toll" type="number" />
-          <Field label="Commission (Rs)" name="commission" type="number" />
-          <Field label="Fuel Liters (L)" name="fuel_liters" type="number" />
-          <Field label="Fuel Amount (Rs)" name="fuel_amount" type="number" />
-          <Field label="Expenses (Rs)" name="expenses" type="number" />
+      <div style={cardStyle}>
+        <div style={sectionStyle}>Financial Details</div>
+        <div style={grid3}>
+          <div>
+            <label style={labelStyle}>Freight Amount (Rs)</label>
+            <input {...inp(freight, setFreight)} type="number" step="0.01" placeholder="0.00" required/>
+          </div>
+          <div>
+            <label style={labelStyle}>Toll Charges (Rs)</label>
+            <input {...inp(toll, setToll)} type="number" step="0.01" placeholder="0.00"/>
+          </div>
+          <div>
+            <label style={labelStyle}>Commission (Rs)</label>
+            <input {...inp(commission, setCommission)} type="number" step="0.01" placeholder="0.00"/>
+          </div>
+          <div>
+            <label style={labelStyle}>Fuel Liters (L)</label>
+            <input {...inp(fuel_liters, setFuelLiters)} type="number" step="0.01" placeholder="0.00"/>
+          </div>
+          <div>
+            <label style={labelStyle}>Fuel Amount (Rs)</label>
+            <input {...inp(fuel_amount, setFuelAmount)} type="number" step="0.01" placeholder="0.00"/>
+          </div>
+          <div>
+            <label style={labelStyle}>Expenses (Rs)</label>
+            <input {...inp(expenses, setExpenses)} type="number" step="0.01" placeholder="0.00"/>
+          </div>
         </div>
       </div>
 
       {/* Truck Bill */}
-      <div style={S.card}>
-        <div style={S.sectionTitle}>Truck Bill</div>
-        <div style={{display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:'16px'}}>
-          <Field label="Bill Amount (Rs)" name="bill_amount" type="number" />
-          <Field label="Advance (Rs)" name="advance" type="number" />
+      <div style={cardStyle}>
+        <div style={sectionStyle}>Truck Bill</div>
+        <div style={grid2}>
+          <div>
+            <label style={labelStyle}>Bill Amount (Rs)</label>
+            <input {...inp(bill_amount, setBillAmount)} type="number" step="0.01" placeholder="0.00"/>
+          </div>
+          <div>
+            <label style={labelStyle}>Advance (Rs)</label>
+            <input {...inp(advance, setAdvance)} type="number" step="0.01" placeholder="0.00"/>
+          </div>
         </div>
       </div>
 
       {/* Summary */}
-      <div style={S.card}>
-        <div style={S.sectionTitle}>Summary</div>
-        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', alignItems:'center'}}>
-          <div style={S.totalBox}>
+      <div style={cardStyle}>
+        <div style={sectionStyle}>Summary</div>
+        <div style={{...grid2, alignItems:'center'}}>
+          <div style={{background:'rgba(46,204,113,0.08)', border:'1px solid rgba(46,204,113,0.2)',
+            borderRadius:'12px', padding:'20px', textAlign:'center'}}>
             <div style={{fontSize:'11px', fontWeight:'700', textTransform:'uppercase',
               letterSpacing:'0.08em', color:'rgba(46,204,113,0.6)', marginBottom:'8px'}}>
               Total Trip Amount
             </div>
             <div style={{fontSize:'28px', fontWeight:'900',
               color: totalTrip < 0 ? '#E74C3C' : '#2ECC71'}}>
-              Rs {totalTrip.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+              Rs {totalTrip.toLocaleString('en-IN',{minimumFractionDigits:2})}
             </div>
             <div style={{fontSize:'11px', color:'rgba(232,245,233,0.3)', marginTop:'8px'}}>
-              (Bill + Advance) &minus; (Freight + Toll + Commission + Fuel + Expenses)
+              (Bill + Advance) &minus; (Freight + Toll + Comm + Fuel + Exp)
             </div>
           </div>
           <button type="submit" disabled={loading} style={{
-            ...S.btn,
-            opacity: loading ? 0.6 : 1,
-            cursor: loading ? 'not-allowed' : 'pointer'
+            width:'100%', background:'linear-gradient(135deg,#2ECC71,#27AE60)',
+            color:'#0F1A15', fontWeight:'800', fontSize:'14px', border:'none',
+            borderRadius:'12px', padding:'16px', cursor: loading ? 'not-allowed' : 'pointer',
+            fontFamily:'inherit', opacity: loading ? 0.6 : 1
           }}>
             {loading ? 'Saving...' : 'Save Trip'}
           </button>
