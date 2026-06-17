@@ -107,7 +107,12 @@ body {
   opacity: 0.5;
   cursor: not-allowed;
 }
-/* Fix for iOS/Safari autofill */
+/* Fix input focus without JS */
+input:focus, select:focus, textarea:focus {
+  border-color: #2ECC71 !important;
+  box-shadow: 0 0 0 3px rgba(46,204,113,0.12) !important;
+  outline: none !important;
+}
 .inp:-webkit-autofill,
 .inp:-webkit-autofill:hover,
 .inp:-webkit-autofill:focus {

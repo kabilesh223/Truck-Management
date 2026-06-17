@@ -99,14 +99,6 @@ export default function TripForm({ initial = {}, settings = {}, onSubmit, loadin
     value: value,
     onChange: e => setter(e.target.value),
     autoComplete: 'off',
-    onFocus: e => {
-      e.target.style.borderColor = '#2ECC71'
-      e.target.style.boxShadow = '0 0 0 3px rgba(46,204,113,0.12)'
-    },
-    onBlur: e => {
-      e.target.style.borderColor = 'rgba(46,204,113,0.3)'
-      e.target.style.boxShadow = 'none'
-    },
     ...extra
   })
 
